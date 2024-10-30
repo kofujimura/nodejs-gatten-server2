@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="-1" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script type="module">
+      import { io } from "https://cdn.socket.io/4.5.1/socket.io.esm.min.js";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        let room = "room001";
+        let devid = "";
+        let decPlaces = 2;
+        let interval = 50; // 20 fps
+        let alpha = 0,
+          beta = 0,
+          gamma = 0;
+        let z = 0;
+
+        const socket = io();
+
+        socket.on("mylogin", (data) => {
+          devid = data;
+          document.querySelector("#contents").textContent =
+            "接続されました。あなたのIDは：" + devid;
+          document.querySelector("#content").style.backgroundColor =
+            idToColor(devid);
+        });
+
+        if (!("WebSocket" in window)) {
+          alert("ブラウザがWebSocketsをサポートしていません");
+        }
+
+        document.querySelector("#connect").addEventListener("click", () => {
+          room = document.querySelector("#room").value;
+          setInterval(() => {
+            socket.emit("sensor", {
+              id: devid,
+              room: room,
+              a: alpha,
+              b: beta,
+              g: gamma,
+              z: z,
+            });
+          }, interval);
+          document.querySelector("#connect").style.display = "none";
+          request_permission();
+        });
+
+        function idToColor(str) {
+          let r = (9 * str.charCodeAt(0)) % 256;
+          let g = (9 * str.charCodeAt(1)) % 256;
+          let b = (9 * str.charCodeAt(2)) % 256;
+          return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        window.ondevicemotion = (event) => {
+          z = event.accelerationIncludingGravity.z.toFixed(decPlaces);
+        };
+
+        window.ondeviceorientation = (event) => {
+          alpha = event.alpha.toFixed(decPlaces);
+          beta = event.beta.toFixed(decPlaces);
+          gamma = event.gamma.toFixed(decPlaces);
+        };
+
+        function request_permission() {
+          if (
+            DeviceMotionEvent &&
+            typeof DeviceMotionEvent.requestPermission === "function"
+          ) {
+            DeviceMotionEvent.requestPermission();
+          }
+          if (
+            DeviceOrientationEvent &&
+            typeof DeviceOrientationEvent.requestPermission === "function"
+          ) {
+            DeviceOrientationEvent.requestPermission();
+          }
+        }
+      });
+    </script>
+
+    <style>
+      #label {
+        width: 15%;
+        height: 16px;
+      }
+      #room {
+        width: 25%;
+        height: 18px;
+      }
+      #connect {
+        width: 15%;
+        height: 24px;
+      }
+      #content {
+        background-color: #ccc;
+      }
+      .space {
+        height: 24px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <center>
+      <div id="content">
+        <div class="space"></div>
+        <span id="label">room: </span>
+        <input id="room" type="text" size="10" value="room001" />
+        <input id="connect" type="button" value="接続" />
+        <div class="space"></div>
+        <img src="img/controller.png" width="80%" />
+        <div>
+          <div class="space"></div>
+          <p id="contents">デバイスを傾けて下さい</p>
+        </div>
+      </div>
+      <div id="footer">
+        <h4>スマホセンサー</h4>
+      </div>
+    </center>
+  </body>
+</html>

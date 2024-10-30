@@ -1,0 +1,22 @@
+{
+  "name": "nodejs-gatten",
+  "version": "2.0.0",
+  "type": "module",
+  "license": "MIT",
+  "description": "Web programming II node.js",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "express": "4.21.0",
+    "http-errors": "2.0.0",
+    "path": "0.12.7",
+    "socket.io": "4.8.0",
+    "url": "0.11.4"
+  },
+  "devDependencies": {
+    "nodemon": "1.18.4"
+  },
+  "keywords": []
+}

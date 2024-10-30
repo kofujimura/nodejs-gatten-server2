@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>なにか質問ある？</title>
+
+    <!-- Bootstrap -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+      crossorigin="anonymous"
+    />
+
+    <script
+      src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <style>
+      /* ヘッダーとフッターの固定 */
+      body {
+        height: 100%;
+        overflow: hidden;
+        background-color: #88bbdd;
+      }
+
+      #messages {
+        position: absolute;
+        top: 60px;
+        bottom: 70px;
+        right: 0;
+        left: 0;
+        overflow-y: auto;
+      }
+
+      footer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 70px;
+      }
+
+      span.myid {
+        float: right;
+        margin-left: auto;
+      }
+
+      #stampmenu {
+        position: absolute;
+        top: 60px;
+        bottom: 70px;
+        right: 0;
+        left: 0;
+        overflow-y: auto;
+      }
+
+      #stampmenu img {
+        transition: transform 0.3s linear;
+      }
+
+      #stampmenu img:hover {
+        transform: scale(2);
+      }
+
+      img.my-stamp {
+        width: 128px;
+        height: 128px;
+      }
+      img.my-stamp2 {
+        width: 64px;
+        height: 64px;
+      }
+
+      img.others-stamp {
+        position: relative;
+        left: 32px;
+        top: -10px;
+        width: 128px;
+        height: 128px;
+        display: table-cell;
+        vertical-align: text-top;
+      }
+
+      img.slide {
+        position: relative;
+        left: 32px;
+        top: -10px;
+        width: 60%;
+        height: auto;
+        display: table-cell;
+        vertical-align: text-top;
+      }
+
+      img.others-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 16px;
+      }
+
+      span.others-id {
+        vertical-align: text-top;
+      }
+
+      div.my-baloon {
+        float: right;
+        padding: 4px;
+        border: 0px;
+        display: table-cell;
+        background-color: transparent;
+        background-image: url("img/my-baloon.svg");
+        background-repeat: no-repeat;
+        background-position: right top;
+      }
+
+      div.my-mes {
+        margin-right: 10px;
+        /* margin-left: auto; */
+        max-width: 250px;
+        padding: 3px;
+        border: 0px;
+        border-radius: 12px;
+        text-align: left;
+        display: table-cell;
+        vertical-align: text-top;
+        background-color: lightgreen;
+      }
+
+      div.clear-float {
+        clear: both;
+      }
+
+      div.others-baloon {
+        float: relative;
+        left: 32px;
+        top: -6px;
+        padding: 4px;
+        border: 0px;
+        display: table-cell;
+        background-color: transparent;
+        background-image: url("img/others-baloon.svg");
+        background-repeat: no-repeat;
+        background-position: left top;
+      }
+
+      div.others-mes {
+        position: relative;
+        left: 0px;
+        max-width: 250px;
+        padding: 3px;
+        border: 0px;
+        border-radius: 12px;
+        text-align: left;
+        display: table-cell;
+        vertical-align: text-top;
+        background-color: white;
+      }
+
+      div.login {
+        color: white;
+      }
+
+      .white-char {
+        color: white;
+      }
+
+      .list-group {
+        margin-bottom: 20px;
+        padding-left: 0;
+      }
+
+      .list-group-item {
+        position: relative;
+        display: block;
+        padding: 2px 3px;
+        /* margin-bottom: -1px;*/
+        background-color: transparent;
+        border: 0px;
+      }
+
+      .top {
+        margin: 0;
+        padding: 0;
+        position: fixed;
+        right: 30px;
+        top: 10px;
+      }
+      .top2 {
+        margin: 0;
+        padding: 0;
+        position: fixed;
+        right: 150px;
+        top: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-dark bg-primary">
+      <div class="container">
+        <div class="navbar-header">
+          <span class="navbar-brand">ガッテン</span>
+        </div>
+        <div>
+          <div class="top2">
+            <button id="top3" type="button" class="btn btn-sm btn-primary">
+              先頭へ
+            </button>
+            <button id="top4" type="button" class="btn btn-sm btn-primary">
+              最新へ
+            </button>
+          </div>
+          <div id="top1" class="top">
+            <button type="button" class="btn btn-sm btn-danger">
+              スクロールON
+            </button>
+          </div>
+          <div id="top2" class="top">
+            <button type="button" class="btn btn-sm btn-info">
+              スクロールOFF
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div id="messages" class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <p class="myID"></p>
+          <ul id="posts" class="list-group"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="stampmenu" tabindex="-1">
+      <div class="modal-dialog" role="document">
+        <div class="modal-body">
+          <div class="container-fluid">
+            <div class="row">
+              <div id="stamps" class="col-md-12" data-dismiss="modal"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer footer-dark bg-primary">
+      <div class="container">
+        <div onsubmit="sendMessage();">
+          <div id="input" class="form-group">
+            <input
+              id="message"
+              type="text"
+              class="form-control"
+              size="20"
+              placeholder="メッセージを入力"
+            />
+            <!--<input type="text" name="dummy" style="display:none;"/>-->
+            <button id="update" type="button" class="btn btn-sm btn-primary">
+              書き込む
+            </button>
+            <button id="gatten" type="button" class="btn btn-sm btn-primary">
+              ガッテンする
+            </button>
+            <button
+              id="stamp"
+              type="button"
+              class="btn btn-sm btn-primary"
+              data-toggle="modal"
+              data-target="#stampmenu"
+            >
+              スタンプ
+            </button>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const socket = io.connect();
+        const posts = document.querySelector("ul#posts");
+        const message = document.querySelector("#message");
+        const stampmenu = document.querySelector("#stampmenu");
+        const top1 = document.querySelector("#top1");
+        const top2 = document.querySelector("#top2");
+        const messagesDiv = document.querySelector("#messages");
+
+        let myid;
+        let roll = 0;
+        let stm = 0;
+
+        // スタンプの生成
+        const stampBaseUrl = "stamps/";
+        const stamps = [
+          "cat01.png",
+          "cat02.png",
+          "cat03.png",
+          "cat04.png",
+          "cat05.png",
+          "cat06.png",
+          "cat07.png",
+          "cat08.png",
+          "cat09.png",
+          "cat10.png",
+          "cat11.png",
+          "panda01.png",
+          "panda02.png",
+        ];
+
+        const stampsDiv = document.querySelector("#stamps");
+        stamps.forEach((stamp) => {
+          const img = document.createElement("img");
+          img.classList.add("my-stamp2");
+          img.src = stampBaseUrl + stamp;
+          stampsDiv.appendChild(img);
+        });
+
+        stampmenu.style.display = "none";
+
+        socket.on("mylogin", function (data) {
+          myid = data;
+          const myIDDiv = document.querySelector(".myID");
+          const span = document.createElement("span");
+          span.classList.add("myid");
+          span.textContent = "あなたのID: " + data + " ";
+          const icon = document.createElement("img");
+          icon.classList.add("others-icon");
+          icon.src = "img/user04s.png";
+          icon.style.backgroundColor = idToColor(data);
+          span.appendChild(icon);
+          myIDDiv.appendChild(span);
+        });
+
+        socket.on("login", function (data) {
+          const listItem = document.createElement("li");
+          listItem.classList.add("list-group-item");
+
+          if (myid == data) {
+            listItem.classList.add("text-right");
+
+            const clearDiv = document.createElement("div");
+            clearDiv.classList.add("clear-float");
+            listItem.appendChild(clearDiv);
+          } else {
+            const mesDiv = document.createElement("div");
+            mesDiv.classList.add("login");
+            mesDiv.textContent = "ID: " + data + " が参加しました";
+            listItem.appendChild(mesDiv);
+          }
+
+          posts.appendChild(listItem);
+
+          if (roll === 0) {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          }
+        });
+
+        socket.on("post", function (data) {
+          const listItem = document.createElement("li");
+          listItem.classList.add("list-group-item");
+
+          if (data.id == myid) {
+            listItem.classList.add("text-right");
+
+            const baloonDiv = document.createElement("div");
+            baloonDiv.classList.add("my-baloon");
+            listItem.appendChild(baloonDiv);
+
+            const mesDiv = document.createElement("div");
+            mesDiv.classList.add("my-mes");
+            mesDiv.textContent = data.post;
+            baloonDiv.appendChild(mesDiv);
+
+            const clearDiv = document.createElement("div");
+            clearDiv.classList.add("clear-float");
+            listItem.appendChild(clearDiv);
+          } else {
+            const idSpan = document.createElement("span");
+            idSpan.classList.add("others-id");
+            idSpan.textContent = "ID: " + data.id;
+            listItem.appendChild(idSpan);
+
+            const iconImg = document.createElement("img");
+            iconImg.classList.add("others-icon");
+            iconImg.src = "img/user04s.png";
+            iconImg.style.backgroundColor = idToColor(data.id);
+            idSpan.insertBefore(iconImg, idSpan.firstChild);
+
+            const baloonDiv = document.createElement("div");
+            baloonDiv.classList.add("others-baloon");
+            listItem.appendChild(baloonDiv);
+
+            const mesDiv = document.createElement("div");
+            mesDiv.classList.add("others-mes");
+            mesDiv.textContent = data.post;
+            baloonDiv.appendChild(mesDiv);
+          }
+
+          posts.appendChild(listItem);
+
+          if (roll === 0) {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          }
+        });
+
+        socket.on("stamp", function (data) {
+          const listItem = document.createElement("li");
+          listItem.classList.add("list-group-item");
+
+          const stampImg = document.createElement("img");
+          if (data.id == myid) {
+            listItem.classList.add("text-right");
+
+            stampImg.classList.add("my-stamp");
+            stampImg.src = data.stamp;
+            listItem.appendChild(stampImg);
+
+            const clearDiv = document.createElement("div");
+            clearDiv.classList.add("clear-float");
+            listItem.appendChild(clearDiv);
+          } else {
+            const idSpan = document.createElement("span");
+            idSpan.classList.add("others-id");
+            idSpan.textContent = "ID: " + data.id;
+            listItem.appendChild(idSpan);
+
+            const iconImg = document.createElement("img");
+            iconImg.classList.add("others-icon");
+            iconImg.src = "img/user04s.png";
+            iconImg.style.backgroundColor = idToColor(data.id);
+            idSpan.insertBefore(iconImg, idSpan.firstChild);
+
+            stampImg.classList.add("others-stamp");
+          }
+          stampImg.src = data.stamp;
+          listItem.appendChild(stampImg);
+
+          posts.appendChild(listItem);
+
+          if (roll === 0) {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          }
+        });
+
+        message.addEventListener("keypress", function (e) {
+          if (e.which === 13) {
+            if (message.value.length === 0) return;
+            socket.emit("post", message.value);
+            message.value = "";
+          }
+        });
+
+        document
+          .querySelector("#update")
+          .addEventListener("click", function (e) {
+            if (message.value.length === 0) return;
+            socket.emit("post", message.value);
+            message.value = "";
+          });
+
+        document
+          .querySelector("#gatten")
+          .addEventListener("click", function (e) {
+            socket.emit("post", "ガッテンしました");
+          });
+
+        document
+          .querySelector("#stamp")
+          .addEventListener("click", function (e) {
+            stampmenu.style.display = "block";
+          });
+
+        stampsDiv.querySelectorAll("img.my-stamp2").forEach((stampImg) => {
+          stampImg.addEventListener("click", function (e) {
+            socket.emit("stamp", e.target.src);
+            stampmenu.style.display = "none";
+          });
+        });
+
+        top1.addEventListener("click", function (e) {
+          roll = 1;
+          top1.style.display = "none";
+          top2.style.display = "block";
+        });
+
+        top2.addEventListener("click", function (e) {
+          roll = 0;
+          top2.style.display = "none";
+          top1.style.display = "block";
+        });
+
+        document.querySelector("#top3").addEventListener("click", function (e) {
+          messagesDiv.scrollTop = 0;
+        });
+
+        document.querySelector("#top4").addEventListener("click", function (e) {
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+
+        function idToColor(id) {
+          let bin = atob(id.replace(/[\_\-]+/, "8"));
+          let hex = "";
+          for (let i = 0; i < bin.length; i++) {
+            let tmp = bin.charCodeAt(i).toString(16);
+            if (tmp.length === 1) tmp = "0" + tmp;
+            hex += tmp;
+          }
+          return "#" + hex.substr(0, 6);
+        }
+
+        window.addEventListener("beforeunload", function () {
+          return "このページを離れると全てのメッセージ削除されます。よろしいですか？";
+        });
+      });
+    </script>
+  </body>
+</html>
